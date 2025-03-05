@@ -1,14 +1,23 @@
+require('dotenv').config();
+const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const next = require('next');
+const cors = require('cors');
 
 const dev = process.env.NODE_ENV !== 'production';
 const app = next({ dev });
 const handle = app.getRequestHandler();
 
 app.prepare().then(() => {
-  const server = http.createServer((req, res) => {
-    handle(req, res);
+  const expressApp = express();
+  expressApp.use(cors());
+  
+  const server = http.createServer(expressApp);
+
+  // Handle Next.js requests
+  expressApp.all('*', (req, res) => {
+    return handle(req, res);
   });
 
   const io = new Server(server, {
