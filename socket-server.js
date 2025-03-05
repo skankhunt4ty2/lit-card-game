@@ -53,7 +53,14 @@ function getNextPlayer(currentPlayerId, players) {
   // ... (existing function)
 }
 
+// Get port from environment variable or use default
 const PORT = process.env.PORT || 3002;
+
+// Add a health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok' });
+});
+
 console.log(`Attempting to start server on port ${PORT}...`);
 
 server.listen(PORT, () => {
