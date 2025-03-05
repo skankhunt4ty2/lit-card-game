@@ -5,9 +5,9 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "node server.js",
+    "start": "next start",
     "lint": "next lint",
-    "server": "node server.js"
+    "socket-server": "node socket-server.js"
   },
   "engines": {
     "node": ">=18.0.0"
