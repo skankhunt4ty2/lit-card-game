@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useGameStore } from '@/stores/gameStore';
 import { Card, Player, Team, SetType, CardRequest, SetDeclaration } from '@/types/game';
 import React from 'react';
-import { initializeSocket, cleanup, joinRoom, createRoom, onRoomUpdate, onGameStarted, onHandUpdate, onActionUpdate, onGameUpdate, joinTeam, shuffleTeams, startGame, requestCard, declareSet, claimTurn } from '@/utils/socketClient';
+import { initSocket, cleanup, joinRoom, createRoom, onRoomUpdate, onGameStarted, onHandUpdate, onActionUpdate, onGameUpdate, joinTeam, shuffleTeams, startGame, requestCard, declareSet, claimTurn } from '@/utils/socketClient';
 
 // Track socket initialization at module level to prevent multiple initializations
 let socketInitialized = false;
@@ -136,7 +136,7 @@ export default function RoomPage() {
     
     // Initialize socket connection
     console.log('Initializing socket connection...');
-    initializeSocket();
+    initSocket();
     
     // Parse URL parameters
     const searchParams = typeof window !== 'undefined' 
