@@ -139,3 +139,39 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 - Inspired by traditional card games like Literature and Fish
 - Built as a learning project for real-time multiplayer game development
+
+## Development Setup
+
+1. Install dependencies:
+```bash
+npm install
+```
+
+2. Create a `.env.local` file:
+```bash
+NEXT_PUBLIC_SOCKET_SERVER_URL=http://localhost:3002
+```
+
+3. Start the development server:
+```bash
+npm run dev
+```
+
+## Production Deployment
+
+### Socket.IO Server (Railway)
+1. The server will automatically use the `PORT` environment variable provided by Railway
+2. Set the following environment variables in Railway:
+   - `NODE_ENV=production`
+   - `CORS_ORIGIN=https://your-vercel-app-url.vercel.app`
+
+### Next.js Client (Vercel)
+1. Set the following environment variables in Vercel:
+   - `NEXT_PUBLIC_SOCKET_SERVER_URL=https://your-railway-app-url.railway.app`
+
+## Environment Variables
+
+- `NEXT_PUBLIC_SOCKET_SERVER_URL`: URL of the Socket.IO server
+- `CORS_ORIGIN`: Allowed origin for CORS (in production)
+- `PORT`: Port for the Socket.IO server (provided by Railway in production)
+- `NODE_ENV`: Environment mode ('development' or 'production')
