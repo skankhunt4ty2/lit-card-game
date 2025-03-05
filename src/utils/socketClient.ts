@@ -18,133 +18,29 @@ let currentRoomName: string | null = null;
 let hasJoinedRoom = false;
 
 // Initialize socket connection
-export function initializeSocket(): Socket {
-  // Return existing socket if it exists and is connected
-  if (socket && socket.connected) {
-    console.log('Reusing existing socket connection:', socket.id);
-    return socket;
-  }
-  
-  // Don't attempt to reconnect if we're in cleanup mode or already connecting
-  if (isCleaningUp || isConnecting) {
-    console.log('Not connecting - in cleanup or already connecting mode');
-    // Return existing socket or a dummy one that won't do anything
-    return socket || io('http://localhost:3002', { autoConnect: false });
-  }
+export function initSocket(): Socket {
+  if (socket) return socket;
 
   console.log('Initializing new socket connection...');
-  isConnecting = true;
-  
-  // Try to connect to each port in sequence
-  const connectToNextPort = () => {
-    if (connectionAttempts >= PORTS_TO_TRY.length || isCleaningUp) {
-      console.error('Failed to connect to socket server after trying all ports');
-      isConnecting = false;
-      return socket || io('http://localhost:3002', { autoConnect: false });
-    }
-    
-    const port = PORTS_TO_TRY[connectionAttempts];
-    // Use window.location.origin when in browser environment
-    const socketUrl = typeof window !== 'undefined' 
-      ? `${window.location.protocol}//${window.location.hostname}:${port}`
-      : `http://localhost:${port}`;
-    
-    console.log(`Attempting to connect to socket server at ${socketUrl} (Attempt ${connectionAttempts + 1} of ${PORTS_TO_TRY.length})`);
-    
-    if (socket) {
-      // Try to clean up previous connection
-      try {
-        socket.removeAllListeners();
-        socket.disconnect();
-      } catch (e) {
-        console.error('Error cleaning up previous socket:', e);
-      }
-    }
-    
-    const newSocket = io(socketUrl, {
-      autoConnect: true,
-      reconnection: true,
-      reconnectionAttempts: 3,
-      timeout: CONNECTION_TIMEOUT_MS,
-      transports: ['websocket', 'polling'],
-    });
-    
-    // Clear any existing timeout
-    if (connectionTimeout) {
-      clearTimeout(connectionTimeout);
-    }
-    
-    // Set connect timeout
-    connectionTimeout = setTimeout(() => {
-      console.log(`Connection to port ${port} timed out`);
-      
-      if (isCleaningUp) return;
-      
-      // Only close if connection is still pending
-      if (newSocket && !newSocket.connected) {
-        try {
-          newSocket.close();
-        } catch (e) {
-          console.error('Error closing socket after timeout:', e);
-        }
-      }
-      
-      // Try next port
-      connectionAttempts++;
-      connectToNextPort();
-    }, CONNECTION_TIMEOUT_MS);
-    
-    newSocket.on('connect', () => {
-      console.log('Connected to server with ID:', newSocket.id);
-      if (connectionTimeout) {
-        clearTimeout(connectionTimeout);
-        connectionTimeout = null;
-      }
-      
-      // Only update the global socket if we're not cleaning up
-      if (!isCleaningUp) {
-        socket = newSocket;
-        isConnecting = false;
-      }
-    });
-    
-    newSocket.on('connect_error', (error) => {
-      console.error(`Connection error to port ${port}:`, error.message);
-      if (connectionTimeout) {
-        clearTimeout(connectionTimeout);
-        connectionTimeout = null;
-      }
-      
-      // Try next port if not in cleanup
-      if (!isCleaningUp) {
-        connectionAttempts++;
-        try {
-          newSocket.close();
-        } catch (e) {
-          console.error('Error closing socket after connect error:', e);
-        }
-        connectToNextPort();
-      }
-    });
-    
-    newSocket.on('disconnect', (reason) => {
-      console.log(`Disconnected from server: ${reason}`);
-      
-      // Auto-reconnect if unexpected disconnect and not cleaning up
-      if (reason === 'io server disconnect' && !isCleaningUp) {
-        console.log('Server disconnected us, trying to reconnect...');
-        newSocket.connect();
-      }
-    });
-    
-    newSocket.on('error', (error) => {
-      console.error('Socket error:', error);
-    });
-    
-    return newSocket;
-  };
-  
-  return connectToNextPort();
+  const serverUrl = process.env.NEXT_PUBLIC_SOCKET_SERVER_URL || 'http://localhost:3002';
+  socket = io(serverUrl, {
+    transports: ['websocket'],
+    autoConnect: true,
+  });
+
+  socket.on('connect', () => {
+    console.log('Connected to server');
+  });
+
+  socket.on('connect_error', (error: Error) => {
+    console.error('Connection error:', error);
+  });
+
+  socket.on('error', (error: Error) => {
+    console.error('Socket error:', error);
+  });
+
+  return socket;
 }
 
 // Get the current socket instance
@@ -175,7 +71,7 @@ export function joinRoom(
   
   console.log(`Attempting to join room ${roomName} as ${playerName}`);
   
-  const socket = initializeSocket();
+  const socket = initSocket();
   
   // Skip if already joined with the same parameters
   if (hasJoinedRoom && currentPlayerName === playerName && currentRoomName === roomName) {
@@ -267,7 +163,7 @@ export function createRoom(
   
   console.log(`Attempting to create room ${roomName} as ${playerName} with ${playerCount} players`);
   
-  const socket = initializeSocket();
+  const socket = initSocket();
   
   // Skip if already created/joined with the same parameters
   if (hasJoinedRoom && currentPlayerName === playerName && currentRoomName === roomName) {
