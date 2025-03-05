@@ -1,36 +1,141 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# LIT Card Game
+
+A multiplayer card game where teams compete to collect sets of cards.
+
+## Game Rules
+
+- The game is played with 6 or 8 players, divided into two teams (Red and Blue).
+- Each player is dealt cards from a 48-card deck (no 7s).
+- Players take turns asking opponents for specific cards to complete sets.
+- A set consists of either all the lower cards (A-6) or all the upper cards (8-K) of a suit.
+- When a team collects a complete set, they declare it and score a point.
+- The first team to score 5 points wins the game.
+
+## Running the Game
+
+### Option 1: Standalone Server (Recommended)
+
+1. Install dependencies:
+   ```
+   npm install
+   ```
+
+2. Start the standalone server:
+   ```
+   npm run server
+   ```
+
+3. Open your browser and navigate to:
+   ```
+   http://localhost:3002
+   ```
+
+### Option 2: Next.js Development Server
+
+1. Install dependencies:
+   ```
+   npm install
+   ```
+
+2. Start the Next.js development server:
+   ```
+   npm run dev
+   ```
+
+3. Open your browser and navigate to:
+   ```
+   http://localhost:3000
+   ```
+
+### Testing with the Test Client
+
+For quick testing without the full UI, you can use the included test client:
+
+1. Start the standalone server:
+   ```
+   npm run server
+   ```
+
+2. Open the test client in your browser:
+   ```
+   file:///path/to/your/project/test-client.html
+   ```
+
+3. Use the test client to:
+   - Create or join rooms
+   - Join teams
+   - Start games
+   - View game state updates in real-time
+
+## How to Play
+
+1. Create a room by entering your name, a room name, and selecting the number of players (6 or 8).
+2. Share the room name with other players so they can join.
+3. Assign players to teams (Red or Blue).
+4. Once teams are balanced and all players have joined, the admin can start the game.
+5. On your turn:
+   - Request a specific card from an opponent on the other team.
+   - If they have the card, you get it and can make another request.
+   - If they don't have the card, your turn ends.
+6. When your team has collected all cards in a set, declare it to score a point.
+7. The first team to score 5 points wins the game.
+
+## Technologies Used
+
+- Next.js
+- React
+- Socket.IO
+- TypeScript
+- Tailwind CSS
+
+## Technical Implementation
+
+This project is built with:
+- Next.js (React framework)
+- TypeScript
+- Socket.io for real-time communication
+- Tailwind CSS for styling
+- Zustand for state management
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+- Node.js 18.0 or higher
+- npm or yarn
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+### Installation
+
+1. Clone the repository:
+```
+git clone https://github.com/yourusername/lit-game.git
+cd lit-game
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Install dependencies:
+```
+npm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. Run the development server:
+```
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+4. Open [http://localhost:3000](http://localhost:3000) in your browser
 
-## Learn More
+### Deployment
 
-To learn more about Next.js, take a look at the following resources:
+The game can be deployed to platforms like Vercel or Netlify:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+npm run build
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## License
 
-## Deploy on Vercel
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Acknowledgments
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Inspired by traditional card games like Literature and Fish
+- Built as a learning project for real-time multiplayer game development

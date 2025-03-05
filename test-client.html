@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LIT Game Test Client</title>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            display: flex;
+            gap: 20px;
+        }
+        .panel {
+            flex: 1;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 15px;
+        }
+        button {
+            padding: 8px 12px;
+            margin: 5px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        input, select {
+            padding: 8px;
+            margin: 5px 0;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        #log {
+            height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-top: 10px;
+            background-color: #f9f9f9;
+        }
+        .log-entry {
+            margin-bottom: 5px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+        }
+        .error {
+            color: red;
+        }
+        .success {
+            color: green;
+        }
+    </style>
+</head>
+<body>
+    <h1>LIT Game Test Client</h1>
+    
+    <div class="container">
+        <div class="panel">
+            <h2>Connection</h2>
+            <div>
+                <label for="playerName">Your Name:</label>
+                <input type="text" id="playerName" placeholder="Enter your name">
+            </div>
+            <div>
+                <label for="roomName">Room Name:</label>
+                <input type="text" id="roomName" placeholder="Enter room name">
+            </div>
+            <div>
+                <label for="playerCount">Player Count:</label>
+                <select id="playerCount">
+                    <option value="6">6 Players</option>
+                    <option value="8">8 Players</option>
+                </select>
+            </div>
+            <button id="createRoom">Create Room</button>
+            <button id="joinRoom">Join Room</button>
+            <button id="disconnect">Disconnect</button>
+        </div>
+        
+        <div class="panel">
+            <h2>Game Actions</h2>
+            <div>
+                <label for="team">Team:</label>
+                <select id="team">
+                    <option value="red">Red</option>
+                    <option value="blue">Blue</option>
+                </select>
+                <button id="joinTeam">Join Team</button>
+            </div>
+            <button id="shuffleTeams">Shuffle Teams</button>
+            <button id="startGame">Start Game</button>
+        </div>
+    </div>
+    
+    <h2>Game State</h2>
+    <div id="gameState">Not connected</div>
+    
+    <h2>Log</h2>
+    <div id="log"></div>
+    
+    <script>
+        let socket = null;
+        let playerId = null;
+        
+        // DOM elements
+        const playerNameInput = document.getElementById('playerName');
+        const roomNameInput = document.getElementById('roomName');
+        const playerCountSelect = document.getElementById('playerCount');
+        const teamSelect = document.getElementById('team');
+        const createRoomBtn = document.getElementById('createRoom');
+        const joinRoomBtn = document.getElementById('joinRoom');
+        const disconnectBtn = document.getElementById('disconnect');
+        const joinTeamBtn = document.getElementById('joinTeam');
+        const shuffleTeamsBtn = document.getElementById('shuffleTeams');
+        const startGameBtn = document.getElementById('startGame');
+        const gameStateDiv = document.getElementById('gameState');
+        const logDiv = document.getElementById('log');
+        
+        // Helper function to log messages
+        function log(message, type = 'info') {
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
+            logDiv.prepend(entry);
+        }
+        
+        // Helper function to update game state display
+        function updateGameState(state) {
+            if (!state) {
+                gameStateDiv.textContent = 'No game state';
+                return;
+            }
+            
+            gameStateDiv.innerHTML = `
+                <h3>Room: ${state.roomName}</h3>
+                <p>Status: ${state.gameStatus}</p>
+                <p>Players: ${state.players.length}/${state.playerCount}</p>
+                <p>Current Turn: ${state.currentTurnPlayerId || 'None'}</p>
+                <p>Last Action: ${state.lastAction || 'None'}</p>
+                
+                <h4>Players:</h4>
+                <ul>
+                    ${state.players.map(p => `
+                        <li>
+                            ${p.name} (${p.id}) - Team: ${p.team}
+                            ${p.id === playerId ? ' (You)' : ''}
+                            ${p.id === state.currentTurnPlayerId ? ' (Current Turn)' : ''}
+                            ${!p.connected ? ' (Disconnected)' : ''}
+                        </li>
+                    `).join('')}
+                </ul>
+                
+                <h4>Captured Sets:</h4>
+                <p>Red: ${state.capturedSets.filter(s => s.team === 'red').length}</p>
+                <p>Blue: ${state.capturedSets.filter(s => s.team === 'blue').length}</p>
+            `;
+        }
+        
+        // Initialize socket connection
+        function initializeSocket() {
+            if (socket) return;
+            
+            socket = io('http://localhost:3002');
+            
+            socket.on('connect', () => {
+                log('Connected to server', 'success');
+            });
+            
+            socket.on('disconnect', () => {
+                log('Disconnected from server');
+                playerId = null;
+            });
+            
+            socket.on('error', (error) => {
+                log(`Error: ${error.message}`, 'error');
+            });
+            
+            socket.on('roomCreated', (data) => {
+                log(`Room created: ${data.roomName}`, 'success');
+                playerId = data.playerId;
+            });
+            
+            socket.on('joinedRoom', (data) => {
+                log(`Joined room: ${data.roomName}`, 'success');
+                playerId = data.playerId;
+            });
+            
+            socket.on('roomUpdate', (gameState) => {
+                log('Room updated');
+                updateGameState(gameState);
+            });
+            
+            socket.on('gameStarted', (gameState) => {
+                log('Game started!', 'success');
+                updateGameState(gameState);
+            });
+            
+            socket.on('updateHand', (data) => {
+                log(`Hand updated: ${data.hand.length > 0 ? 'You have cards' : 'You have no cards'}`);
+            });
+            
+            socket.on('actionUpdate', (data) => {
+                log(`Action: ${data.lastAction}`);
+            });
+            
+            socket.on('gameUpdate', (gameState) => {
+                log('Game updated');
+                updateGameState(gameState);
+            });
+        }
+        
+        // Event listeners
+        createRoomBtn.addEventListener('click', () => {
+            const playerName = playerNameInput.value.trim();
+            const roomName = roomNameInput.value.trim();
+            const playerCount = parseInt(playerCountSelect.value);
+            
+            if (!playerName || !roomName) {
+                log('Please enter player name and room name', 'error');
+                return;
+            }
+            
+            initializeSocket();
+            
+            socket.emit('createRoom', {
+                playerName,
+                roomName,
+                playerCount
+            });
+            
+            log(`Creating room: ${roomName} with ${playerCount} players...`);
+        });
+        
+        joinRoomBtn.addEventListener('click', () => {
+            const playerName = playerNameInput.value.trim();
+            const roomName = roomNameInput.value.trim();
+            
+            if (!playerName || !roomName) {
+                log('Please enter player name and room name', 'error');
+                return;
+            }
+            
+            initializeSocket();
+            
+            socket.emit('joinRoom', {
+                playerName,
+                roomName
+            });
+            
+            log(`Joining room: ${roomName}...`);
+        });
+        
+        disconnectBtn.addEventListener('click', () => {
+            if (socket) {
+                socket.disconnect();
+                socket = null;
+                log('Disconnected from server');
+                gameStateDiv.textContent = 'Not connected';
+            }
+        });
+        
+        joinTeamBtn.addEventListener('click', () => {
+            if (!socket) {
+                log('Not connected to server', 'error');
+                return;
+            }
+            
+            const team = teamSelect.value;
+            const roomName = roomNameInput.value.trim();
+            
+            socket.emit('joinTeam', {
+                roomName,
+                team
+            });
+            
+            log(`Joining team: ${team}...`);
+        });
+        
+        shuffleTeamsBtn.addEventListener('click', () => {
+            if (!socket) {
+                log('Not connected to server', 'error');
+                return;
+            }
+            
+            const roomName = roomNameInput.value.trim();
+            
+            socket.emit('shuffleTeams', {
+                roomName
+            });
+            
+            log('Shuffling teams...');
+        });
+        
+        startGameBtn.addEventListener('click', () => {
+            if (!socket) {
+                log('Not connected to server', 'error');
+                return;
+            }
+            
+            const roomName = roomNameInput.value.trim();
+            
+            socket.emit('startGame', {
+                roomName
+            });
+            
+            log('Starting game...');
+        });
+    </script>
+</body>
+</html> 
