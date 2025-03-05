@@ -786,38 +786,14 @@ app.prepare().then(() => {
     return players[nextIndex].id;
   }
 
-  // Try a range of ports if the primary one is in use
-  const tryPort = (port) => {
-    // Set a maximum port to prevent infinite recursion
-    const MAX_PORT = port + 10;
-    
-    if (port > MAX_PORT) {
-      console.error(`Failed to find an available port after trying ports ${port - 10} through ${MAX_PORT}`);
-      process.exit(1);
-    }
-    
-    server.once('error', (err) => {
-      if (err.code === 'EADDRINUSE') {
-        console.log(`Port ${port} is in use, trying ${port + 1} instead.`);
-        server.removeAllListeners('listening');
-        tryPort(port + 1);
-      } else {
-        console.error('Server error:', err);
-        process.exit(1);
-      }
-    });
-    
-    server.listen(port, () => {
-      console.log(`Server running on http://localhost:${port}`);
-      // Make it very clear which port is being used for easier debugging
-      console.log(`##################################`);
-      console.log(`# Socket.io server active on port ${port} #`);
-      console.log(`# Connect your client to this port #`);
-      console.log(`##################################`);
-    });
-  };
-  
   const PORT = process.env.PORT || 3002;
   console.log(`Attempting to start server on port ${PORT}...`);
-  tryPort(PORT);
+  
+  server.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+    console.log(`##################################`);
+    console.log(`# Socket.io server active on port ${PORT} #`);
+    console.log(`# Connect your client to this port #`);
+    console.log(`##################################`);
+  });
 }); 
