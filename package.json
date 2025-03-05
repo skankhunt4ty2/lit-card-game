@@ -20,12 +20,17 @@
     "socket.io-client": "^4.7.4",
     "express": "^4.18.2",
     "cors": "^2.8.5",
-    "dotenv": "^16.4.5"
+    "dotenv": "^16.4.5",
+    "zustand": "^4.5.1",
+    "uuid": "^9.0.1",
+    "@vercel/og": "^0.6.2",
+    "@geist-ui/core": "^2.3.8"
   },
   "devDependencies": {
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "@types/uuid": "^9.0.8",
     "typescript": "^5"
   }
 }
