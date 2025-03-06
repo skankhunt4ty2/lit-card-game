@@ -2,10 +2,13 @@ services:
   - type: web
     name: lit-card-game-socket
     env: node
-    buildCommand: cd socket-server && npm install
-    startCommand: cd socket-server && npm start
+    rootDir: socket-server
+    buildCommand: npm install
+    startCommand: npm start
     envVars:
       - key: NODE_ENV
         value: production
       - key: CORS_ORIGIN
-        value: https://lit-card-game.vercel.app 
+        value: https://lit-card-game.vercel.app
+      - key: PORT
+        value: 10000 
