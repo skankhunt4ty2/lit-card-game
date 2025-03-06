@@ -31,4 +31,13 @@ services:
         value: 86400
       - path: /*
         name: Vary
-        value: Origin 
+        value: Origin
+      - path: /*
+        name: Cache-Control
+        value: no-cache, no-store, must-revalidate
+      - path: /*
+        name: Pragma
+        value: no-cache
+      - path: /*
+        name: Expires
+        value: 0 
