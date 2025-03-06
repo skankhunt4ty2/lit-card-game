@@ -36,13 +36,13 @@ export function initSocket(): Socket {
   console.log('Connecting to server URL:', serverUrl);
   
   socket = io(serverUrl, {
-    transports: ['polling', 'websocket'], // Try polling first, then upgrade to websocket
-    autoConnect: false, // Don't connect automatically
+    transports: ['websocket', 'polling'],
+    autoConnect: false,
     reconnection: true,
-    reconnectionAttempts: 3,
-    reconnectionDelay: 2000,
+    reconnectionAttempts: 5,
+    reconnectionDelay: 1000,
     reconnectionDelayMax: 5000,
-    timeout: 20000, // Reduce timeout to 20 seconds
+    timeout: 45000,
     forceNew: true,
     path: '/socket.io/',
     withCredentials: true,
@@ -51,7 +51,7 @@ export function initSocket(): Socket {
     upgrade: true,
     rememberUpgrade: true,
     extraHeaders: {
-      'Access-Control-Allow-Origin': 'https://lit-card-game.vercel.app',
+      'Access-Control-Allow-Origin': process.env.NEXT_PUBLIC_SOCKET_SERVER_URL || 'https://lit-card-game.vercel.app',
       'Access-Control-Allow-Credentials': 'true',
       'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization'
@@ -66,7 +66,7 @@ export function initSocket(): Socket {
     console.error('Socket connect error:', error);
     if (socket) {
       console.log('Trying polling transport...');
-      socket.io.opts.transports = ['polling'] as any;
+      socket.io.opts.transports = ['polling'];
       socket.connect();
     }
   });
@@ -80,6 +80,23 @@ export function initSocket(): Socket {
     if (reason === 'io server disconnect' && socket) {
       socket.connect();
     }
+  });
+
+  // Add more detailed error logging
+  socket.io.on('ping', () => {
+    console.log('ping');
+  });
+
+  socket.io.on('pong', (latency) => {
+    console.log('pong', latency);
+  });
+
+  socket.io.on('reconnect_attempt', (attempt) => {
+    console.log('reconnection attempt', attempt);
+  });
+
+  socket.io.on('reconnect_failed', () => {
+    console.log('reconnection failed');
   });
   
   return socket;
@@ -217,7 +234,7 @@ export function createRoom(
       console.error('Connection timeout');
       socket?.off('connect');
       onError({ message: 'Connection timeout. Please check your internet connection and try again.' });
-    }, 20000); // Reduced timeout to 20 seconds
+    }, 45000); // Match server timeout
     
     socket.once('connect', () => {
       clearTimeout(connectionTimeout);

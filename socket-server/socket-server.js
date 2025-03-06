@@ -14,44 +14,40 @@ console.log('Environment variables:', {
 
 const app = express();
 
-// Configure CORS with proper options
+// Configure CORS properly
 const corsOptions = {
   origin: process.env.CORS_ORIGIN || 'https://lit-card-game.vercel.app',
   methods: ['GET', 'POST', 'OPTIONS'],
-  credentials: true,
   allowedHeaders: ['Content-Type', 'Authorization'],
-  exposedHeaders: ['Content-Range', 'X-Content-Range'],
-  maxAge: 600
+  credentials: true,
+  preflightContinue: false
 };
 
 // Apply CORS middleware
 app.use(cors(corsOptions));
 
-// Handle preflight requests
+// Handle preflight requests explicitly
 app.options('*', cors(corsOptions));
 
 const server = http.createServer(app);
 
 try {
   const io = new Server(server, {
-    cors: corsOptions,
+    cors: {
+      origin: process.env.CORS_ORIGIN || 'https://lit-card-game.vercel.app',
+      methods: ['GET', 'POST', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization'],
+      credentials: true
+    },
     transports: ['websocket', 'polling'],
     pingTimeout: 60000,
     pingInterval: 25000,
-    connectTimeout: 60000,
+    connectTimeout: 45000,
     allowEIO3: true,
     allowUpgrades: true,
     path: '/socket.io/',
     cookie: false,
-    maxHttpBufferSize: 1e8,
-    allowRequest: (req, callback) => {
-      const origin = req.headers.origin;
-      if (origin === process.env.CORS_ORIGIN || origin === 'https://lit-card-game.vercel.app') {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS'));
-      }
-    }
+    maxHttpBufferSize: 1e8
   });
 
   // Add connection logging
@@ -65,6 +61,13 @@ try {
 
   io.engine.on('upgradeError', (err, req, socket) => {
     console.error('Upgrade error:', err);
+  });
+
+  // Add request logging middleware
+  app.use((req, res, next) => {
+    console.log(`${req.method} ${req.url}`);
+    console.log('Headers:', req.headers);
+    next();
   });
 
   console.log('Socket.IO server initialized successfully');
