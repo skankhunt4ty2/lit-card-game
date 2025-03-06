@@ -17,10 +17,20 @@ let currentPlayerName: string | null = null;
 let currentRoomName: string | null = null;
 let hasJoinedRoom = false;
 
-// Initialize socket connection
-export function initSocket(): Socket {
-  if (socket) return socket;
+// Global socket instance
+let socketInitialized = false;
+let socketInitializing = false;
+let socketInitPromise: Promise<Socket> | null = null;
 
+// Initialize socket connection with a simpler approach
+export function initSocket(): Socket {
+  console.log('initSocket called');
+  
+  if (socket) {
+    console.log('Socket already exists, returning existing socket');
+    return socket;
+  }
+  
   console.log('Initializing new socket connection...');
   const serverUrl = process.env.NEXT_PUBLIC_SOCKET_SERVER_URL || 'http://localhost:3002';
   console.log('Connecting to server URL:', serverUrl);
@@ -29,10 +39,10 @@ export function initSocket(): Socket {
     transports: ['websocket', 'polling'],
     autoConnect: true,
     reconnection: true,
-    reconnectionAttempts: 5,
+    reconnectionAttempts: 10,
     reconnectionDelay: 1000,
     reconnectionDelayMax: 5000,
-    timeout: 20000,
+    timeout: 60000, // Increase timeout to 60 seconds
     forceNew: true,
     path: '/socket.io/',
     withCredentials: true,
@@ -41,49 +51,31 @@ export function initSocket(): Socket {
     upgrade: true,
     rememberUpgrade: true
   });
-
+  
   socket.on('connect', () => {
-    console.log('Connected to server');
+    console.log('Socket connected successfully');
   });
-
-  socket.on('connect_error', (error: Error) => {
-    console.error('Connection error:', error);
-    // Try to reconnect with different transport if polling fails
-    if (error.message.includes('polling') && socket) {
-      console.log('Polling failed, trying websocket transport...');
-      socket.io.opts.transports = ['websocket'];
+  
+  socket.on('connect_error', (error) => {
+    console.error('Socket connect error:', error);
+    if (socket) {
+      console.log('Trying polling transport...');
+      socket.io.opts.transports = ['polling', 'websocket'] as any;
       socket.connect();
     }
   });
-
-  socket.on('error', (error: Error) => {
+  
+  socket.on('error', (error) => {
     console.error('Socket error:', error);
   });
-
+  
   socket.on('disconnect', (reason) => {
-    console.log('Disconnected from server:', reason);
-    if (reason === 'io server disconnect') {
-      // Server initiated disconnect, try to reconnect
-      socket?.connect();
+    console.log('Socket disconnected:', reason);
+    if (reason === 'io server disconnect' && socket) {
+      socket.connect();
     }
   });
-
-  socket.on('reconnect_attempt', (attemptNumber) => {
-    console.log('Attempting to reconnect:', attemptNumber);
-  });
-
-  socket.on('reconnect_failed', () => {
-    console.error('Failed to reconnect to server');
-    // Try to reconnect with a new socket instance
-    if (socket) {
-      socket.disconnect();
-      socket = null;
-      setTimeout(() => {
-        initSocket();
-      }, 1000);
-    }
-  });
-
+  
   return socket;
 }
 
@@ -193,32 +185,44 @@ export function createRoom(
 ): void {
   console.log(`Attempting to create room ${roomName} as ${playerName} with ${playerCount} players`);
   
-  const socketInstance = getSocket();
-  if (!socketInstance) {
-    console.error('Socket not initialized');
+  // Initialize socket if not already done
+  if (!socket) {
+    try {
+      initSocket();
+    } catch (error) {
+      console.error('Error initializing socket:', error);
+      onError({ message: 'Failed to initialize socket connection. Please refresh the page and try again.' });
+      return;
+    }
+  }
+  
+  if (!socket) {
+    console.error('Socket still not initialized after attempt');
     onError({ message: 'Socket connection not established. Please refresh the page and try again.' });
     return;
   }
-
-  // Confirm socket is connected before attempting to create room
-  if (!socketInstance.connected) {
-    console.log('Socket not connected, attempting to connect...');
-    socketInstance.connect();
+  
+  // Wait for connection before proceeding
+  if (!socket.connected) {
+    console.log('Socket not connected, waiting for connection...');
     
-    // Wait for connection before proceeding
-    socketInstance.once('connect', () => {
+    // Set up a timeout for connection
+    const connectionTimeout = setTimeout(() => {
+      console.error('Connection timeout');
+      socket?.off('connect');
+      onError({ message: 'Connection timeout. Please check your internet connection and try again.' });
+    }, 10000);
+    
+    socket.once('connect', () => {
+      clearTimeout(connectionTimeout);
       console.log('Connected, now creating room...');
-      emitCreateRoom(socketInstance, playerName, roomName, playerCount, onCreated, onError);
+      emitCreateRoom(socket!, playerName, roomName, playerCount, onCreated, onError);
     });
     
-    // Handle connection failure
-    socketInstance.once('connect_error', (error) => {
-      console.error('Failed to connect for room creation:', error);
-      onError({ message: 'Failed to connect to the game server. Please try again later.' });
-    });
+    socket.connect();
   } else {
     // Socket already connected, proceed with room creation
-    emitCreateRoom(socketInstance, playerName, roomName, playerCount, onCreated, onError);
+    emitCreateRoom(socket, playerName, roomName, playerCount, onCreated, onError);
   }
 }
 
@@ -241,7 +245,7 @@ function emitCreateRoom(
     socket.off('roomCreated');
     socket.off('error:createRoom');
     onError({ message: 'Connection timed out while creating room. Please try again.' });
-  }, 30000); // Increase timeout to 30 seconds
+  }, 30000);
 
   // Listen for successful room creation
   socket.on('roomCreated', (data: { roomName: string, playerId: string }) => {
