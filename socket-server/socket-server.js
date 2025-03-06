@@ -33,12 +33,7 @@ const server = http.createServer(app);
 
 try {
   const io = new Server(server, {
-    cors: {
-      origin: process.env.CORS_ORIGIN || 'https://lit-card-game.vercel.app',
-      methods: ['GET', 'POST', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization'],
-      credentials: true
-    },
+    cors: corsOptions,
     transports: ['websocket', 'polling'],
     pingTimeout: 60000,
     pingInterval: 25000,
