@@ -44,17 +44,18 @@ export function initSocket(): Socket {
     reconnectionDelayMax: 5000,
     timeout: 45000,
     forceNew: true,
-    path: '/socket.io/',
+    path: '/socket.io',
     withCredentials: true,
     secure: true,
     rejectUnauthorized: false,
     upgrade: true,
     rememberUpgrade: true,
     extraHeaders: {
+      'Origin': process.env.NEXT_PUBLIC_SOCKET_SERVER_URL || 'https://lit-card-game.vercel.app',
       'Access-Control-Allow-Origin': process.env.NEXT_PUBLIC_SOCKET_SERVER_URL || 'https://lit-card-game.vercel.app',
       'Access-Control-Allow-Credentials': 'true',
       'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With, Accept, Origin'
     }
   });
   

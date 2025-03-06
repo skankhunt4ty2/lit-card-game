@@ -38,11 +38,19 @@ app.use(cors(corsOptions));
 app.options('/socket.io/*', (req, res) => {
   console.log('Socket.IO preflight request received');
   console.log('Headers:', req.headers);
+  console.log('Origin:', req.headers.origin);
+  console.log('Method:', req.method);
+  console.log('Path:', req.path);
+  
+  // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || 'https://lit-card-game.vercel.app');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Max-Age', '86400');
+  res.setHeader('Vary', 'Origin');
+  
+  // Send 204 No Content for preflight
   res.status(204).end();
 });
 
