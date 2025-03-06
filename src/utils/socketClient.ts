@@ -1,6 +1,6 @@
 import { io, Socket } from 'socket.io-client';
 import { GameState, Player, Team, CardRequest, SetDeclaration } from '@/types/game';
-import { Card, Suit } from '@/stores/gameStore';
+import { Card, Suit } from '@/types/game';
 
 // Add persistent flags to track connection state
 let isCleaningUp = false;
