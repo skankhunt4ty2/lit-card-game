@@ -1,5 +1,6 @@
 import { io, Socket } from 'socket.io-client';
 import { GameState, Player, Team, CardRequest, SetDeclaration } from '@/types/game';
+import { Card, Suit } from '@/stores/gameStore';
 
 // Add persistent flags to track connection state
 let isCleaningUp = false;
@@ -538,4 +539,78 @@ export function cleanup(): void {
       console.log('Socket cleanup complete, ready for new connections');
     }, 1500); // Longer delay to ensure full cleanup
   }, 100); // Short delay before starting cleanup
-} 
+}
+
+export const connect = (serverUrl: string) => {
+  if (!socket) {
+    socket = io(serverUrl);
+  }
+  return socket;
+};
+
+export const disconnect = () => {
+  if (socket) {
+    socket.disconnect();
+    socket = null;
+  }
+};
+
+export const leaveRoom = (roomName: string) => {
+  if (socket) {
+    socket.emit('leaveRoom', roomName);
+  }
+};
+
+export const playCard = (roomName: string, card: Card) => {
+  if (socket) {
+    socket.emit('playCard', { roomName, card });
+  }
+};
+
+export const declareSet = (roomName: string, cards: Card[]) => {
+  if (socket) {
+    socket.emit('declareSet', { roomName, cards });
+  }
+};
+
+export const requestCard = (roomName: string, suit: Suit) => {
+  if (socket) {
+    socket.emit('requestCard', { roomName, suit });
+  }
+};
+
+export const onPlayerJoined = (callback: (player: string) => void) => {
+  if (socket) {
+    socket.on('playerJoined', callback);
+  }
+};
+
+export const onPlayerLeft = (callback: (player: string) => void) => {
+  if (socket) {
+    socket.on('playerLeft', callback);
+  }
+};
+
+export const onGameStarted = (callback: (players: string[]) => void) => {
+  if (socket) {
+    socket.on('gameStarted', callback);
+  }
+};
+
+export const onCardPlayed = (callback: (data: { player: string; card: Card }) => void) => {
+  if (socket) {
+    socket.on('cardPlayed', callback);
+  }
+};
+
+export const onSetDeclared = (callback: (data: { player: string; cards: Card[] }) => void) => {
+  if (socket) {
+    socket.on('setDeclared', callback);
+  }
+};
+
+export const onCardRequested = (callback: (data: { player: string; suit: Suit }) => void) => {
+  if (socket) {
+    socket.on('cardRequested', callback);
+  }
+}; 

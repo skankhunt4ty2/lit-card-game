@@ -176,59 +176,54 @@ npm run dev
 - `PORT`: Port for the Socket.IO server (provided by Railway in production)
 - `NODE_ENV`: Environment mode ('development' or 'production')
 
-# LIT Card Game Socket Server
+# LIT Game Socket Server
 
-This is the Socket.IO server for the LIT Card Game, handling real-time communication between players.
+This is the Socket.IO server for the LIT Card Game, handling real-time game state management and player interactions.
 
 ## Environment Variables
 
-Required environment variables:
-- `PORT`: Server port (default: 10000)
 - `NODE_ENV`: Environment (development/production)
-- `CORS_ORIGIN`: Allowed origin for CORS (e.g., https://lit-card-game.vercel.app)
+- `PORT`: Server port (default: 10000)
+- `CORS_ORIGIN`: Allowed origin for CORS (default: https://lit-card-game.vercel.app)
 
 ## Development
 
-1. Install dependencies:
 ```bash
+# Install dependencies
 npm install
-```
 
-2. Start the development server:
-```bash
+# Start development server
 npm run dev
 ```
 
 ## Production
 
-The server is configured to run on Render with the following settings:
-- Node.js version: 18.x
-- Build command: `npm install`
-- Start command: `node socket-server.js`
-- Health check path: `/health`
+```bash
+# Install dependencies
+npm install
+
+# Start production server
+npm start
+```
 
 ## API Endpoints
 
-- `GET /`: Server status
 - `GET /health`: Health check endpoint
-- WebSocket: `/socket.io`
+- `GET /socket.io`: Socket.IO endpoint
 
 ## Socket Events
 
 ### Client to Server
-- `createRoom`: Create a new game room
-- `joinRoom`: Join an existing room
-- `joinTeam`: Join a team
-- `startGame`: Start the game
-- `requestCard`: Request a card from another player
-- `declareSet`: Declare a complete set
-- `claimTurn`: Claim the current turn
+- `joinRoom`: Join a game room
+- `leaveRoom`: Leave a game room
+- `startGame`: Start a game
+- `playCard`: Play a card
+- `endTurn`: End player's turn
 
 ### Server to Client
-- `roomCreated`: Room creation confirmation
-- `joinedRoom`: Room join confirmation
-- `roomUpdate`: Room state update
-- `gameStarted`: Game start confirmation
-- `updateHand`: Player's hand update
-- `gameUpdate`: Game state update
-- `error`: Error messages
+- `roomJoined`: Confirmation of room join
+- `roomLeft`: Confirmation of room leave
+- `gameStarted`: Game start notification
+- `gameState`: Updated game state
+- `playerTurn`: Current player's turn notification
+- `gameEnded`: Game end notification

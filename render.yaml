@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: lit-game-socket-server
+    env: node
+    buildCommand: npm install
+    startCommand: node socket-server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: CORS_ORIGIN
+        value: https://lit-card-game.vercel.app
+      - key: NODE_VERSION
+        value: 18.x
+    healthCheckPath: /health
+    autoDeploy: true
+    headers:
+      - path: /*
+        name: Access-Control-Allow-Origin
+        value: https://lit-card-game.vercel.app
+      - path: /*
+        name: Access-Control-Allow-Methods
+        value: GET, POST, OPTIONS
+      - path: /*
+        name: Access-Control-Allow-Headers
+        value: Content-Type, Authorization
+      - path: /*
+        name: Cache-Control
+        value: no-store, no-cache, must-revalidate, proxy-revalidate 
