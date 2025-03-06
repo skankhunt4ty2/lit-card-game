@@ -36,13 +36,13 @@ export function initSocket(): Socket {
   console.log('Connecting to server URL:', serverUrl);
   
   socket = io(serverUrl, {
-    transports: ['websocket', 'polling'],
-    autoConnect: true,
+    transports: ['polling', 'websocket'], // Try polling first, then upgrade to websocket
+    autoConnect: false, // Don't connect automatically
     reconnection: true,
-    reconnectionAttempts: 5,
-    reconnectionDelay: 1000,
+    reconnectionAttempts: 3,
+    reconnectionDelay: 2000,
     reconnectionDelayMax: 5000,
-    timeout: 60000,
+    timeout: 20000, // Reduce timeout to 20 seconds
     forceNew: true,
     path: '/socket.io/',
     withCredentials: true,
@@ -66,7 +66,7 @@ export function initSocket(): Socket {
     console.error('Socket connect error:', error);
     if (socket) {
       console.log('Trying polling transport...');
-      socket.io.opts.transports = ['polling', 'websocket'] as any;
+      socket.io.opts.transports = ['polling'] as any;
       socket.connect();
     }
   });
@@ -217,7 +217,7 @@ export function createRoom(
       console.error('Connection timeout');
       socket?.off('connect');
       onError({ message: 'Connection timeout. Please check your internet connection and try again.' });
-    }, 30000); // Increased timeout to 30 seconds
+    }, 20000); // Reduced timeout to 20 seconds
     
     socket.once('connect', () => {
       clearTimeout(connectionTimeout);
@@ -225,7 +225,14 @@ export function createRoom(
       emitCreateRoom(socket!, playerName, roomName, playerCount, onCreated, onError);
     });
     
-    socket.connect();
+    // Try to connect
+    try {
+      socket.connect();
+    } catch (error) {
+      console.error('Error connecting socket:', error);
+      clearTimeout(connectionTimeout);
+      onError({ message: 'Failed to connect to server. Please try again.' });
+    }
   } else {
     // Socket already connected, proceed with room creation
     emitCreateRoom(socket, playerName, roomName, playerCount, onCreated, onError);
@@ -245,13 +252,13 @@ function emitCreateRoom(
   socket.off('roomCreated');
   socket.off('error:createRoom');
   
-  // Set up a timeout for room creation (30 seconds)
+  // Set up a timeout for room creation (20 seconds)
   const timeoutId = setTimeout(() => {
     console.error(`Timed out waiting to create room ${roomName}`);
     socket.off('roomCreated');
     socket.off('error:createRoom');
     onError({ message: 'Connection timed out while creating room. Please try again.' });
-  }, 30000);
+  }, 20000);
 
   // Listen for successful room creation
   socket.on('roomCreated', (data: { roomName: string, playerId: string }) => {
@@ -270,8 +277,14 @@ function emitCreateRoom(
   });
 
   // Emit the createRoom event
-  console.log(`Emitting createRoom event for room ${roomName}`);
-  socket.emit('createRoom', { playerName, roomName, playerCount });
+  try {
+    console.log(`Emitting createRoom event for room ${roomName}`);
+    socket.emit('createRoom', { playerName, roomName, playerCount });
+  } catch (error) {
+    console.error('Error emitting createRoom event:', error);
+    clearTimeout(timeoutId);
+    onError({ message: 'Failed to send room creation request. Please try again.' });
+  }
 }
 
 // Join a team
