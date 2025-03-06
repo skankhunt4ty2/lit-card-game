@@ -41,17 +41,21 @@ const server = http.createServer(app);
 
 try {
   const io = new Server(server, {
-    cors: corsOptions,
-    transports: ['polling', 'websocket'],
-    pingTimeout: 30000,
-    pingInterval: 10000,
-    connectTimeout: 30000,
+    cors: {
+      origin: process.env.CORS_ORIGIN || 'https://lit-card-game.vercel.app',
+      methods: ['GET', 'POST', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+      credentials: true
+    },
+    transports: ['polling'],
+    pingTimeout: 60000,
+    pingInterval: 25000,
+    connectTimeout: 45000,
     allowEIO3: true,
-    allowUpgrades: true,
+    allowUpgrades: false,
     path: '/socket.io/',
     cookie: false,
     maxHttpBufferSize: 1e8,
-    connectTimeout: 30000,
     reconnection: true,
     reconnectionAttempts: 5,
     reconnectionDelay: 1000,
@@ -70,6 +74,11 @@ try {
 
   io.engine.on('upgradeError', (err, req, socket) => {
     console.error('Upgrade error:', err);
+  });
+
+  // Add error handling for the server
+  server.on('error', (error) => {
+    console.error('Server error:', error);
   });
 
   console.log('Socket.IO server initialized successfully');
