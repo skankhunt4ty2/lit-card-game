@@ -24,7 +24,10 @@ services:
         value: GET, POST, OPTIONS
       - path: /*
         name: Access-Control-Allow-Headers
-        value: Content-Type, Authorization
+        value: "Origin, X-Requested-With, Content-Type, Accept, Authorization, Access-Control-Allow-Origin, Access-Control-Allow-Methods, Access-Control-Allow-Headers, Access-Control-Allow-Credentials"
+      - path: /*
+        name: Access-Control-Allow-Credentials
+        value: "true"
       - path: /*
         name: Cache-Control
         value: no-store, no-cache, must-revalidate, proxy-revalidate 

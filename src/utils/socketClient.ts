@@ -32,7 +32,7 @@ export function initSocket(): Socket {
   }
   
   console.log('Initializing new socket connection...');
-  const serverUrl = process.env.NEXT_PUBLIC_SOCKET_SERVER_URL || 'https://lit-card-game.onrender.com';
+  const serverUrl = process.env.NEXT_PUBLIC_SOCKET_SERVER_URL || 'https://lit-game-socket-server.onrender.com';
   console.log('Connecting to server URL:', serverUrl);
   
   socket = io(serverUrl, {
@@ -44,18 +44,9 @@ export function initSocket(): Socket {
     reconnectionDelayMax: 5000,
     timeout: 20000,
     forceNew: true,
-    path: '/socket.io',
     withCredentials: true,
-    secure: true,
-    rejectUnauthorized: false,
-    upgrade: true,
-    rememberUpgrade: true,
     extraHeaders: {
-      'Origin': process.env.NEXT_PUBLIC_SOCKET_SERVER_URL || 'https://lit-card-game.vercel.app',
-      'Access-Control-Allow-Origin': process.env.NEXT_PUBLIC_SOCKET_SERVER_URL || 'https://lit-card-game.vercel.app',
-      'Access-Control-Allow-Credentials': 'true',
-      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With, Accept, Origin'
+      'Access-Control-Allow-Origin': '*'
     }
   });
   
