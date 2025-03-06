@@ -14,12 +14,14 @@
     "react-dom": "^18.2.0",
     "socket.io-client": "^4.7.4",
     "tailwindcss": "^3.4.1",
+    "uuid": "^11.1.0",
     "zustand": "^4.5.0"
   },
   "devDependencies": {
     "@types/node": "^20.11.19",
     "@types/react": "^18.2.57",
     "@types/react-dom": "^18.2.19",
+    "@types/uuid": "^10.0.0",
     "autoprefixer": "^10.4.17",
     "eslint": "^8.56.0",
     "eslint-config-next": "14.1.0",
