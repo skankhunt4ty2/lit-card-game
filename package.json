@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
+    "start": "node socket-server.js",
     "lint": "next lint",
     "socket-server": "node socket-server.js"
   },

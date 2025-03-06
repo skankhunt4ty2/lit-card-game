@@ -1,1 +1,1 @@
-web: node socket-server.js 
+web: cd socket-server && npm install && npm start 
