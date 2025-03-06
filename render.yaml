@@ -22,7 +22,16 @@ services:
         value: GET, POST, OPTIONS
       - path: /*
         name: Access-Control-Allow-Headers
-        value: Content-Type, Authorization
+        value: Content-Type, Authorization, X-Requested-With
       - path: /*
         name: Access-Control-Allow-Credentials
-        value: true 
+        value: true
+      - path: /*
+        name: Access-Control-Max-Age
+        value: 86400
+      - path: /*
+        name: Connection
+        value: keep-alive
+      - path: /*
+        name: Keep-Alive
+        value: timeout=5, max=1000 

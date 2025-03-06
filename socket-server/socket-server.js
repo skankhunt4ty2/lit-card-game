@@ -20,7 +20,8 @@ const corsOptions = {
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
-  preflightContinue: false
+  preflightContinue: false,
+  optionsSuccessStatus: 204
 };
 
 // Apply CORS middleware
@@ -34,15 +35,21 @@ const server = http.createServer(app);
 try {
   const io = new Server(server, {
     cors: corsOptions,
-    transports: ['websocket', 'polling'],
-    pingTimeout: 60000,
-    pingInterval: 25000,
-    connectTimeout: 45000,
+    transports: ['polling', 'websocket'],
+    pingTimeout: 30000,
+    pingInterval: 10000,
+    connectTimeout: 30000,
     allowEIO3: true,
     allowUpgrades: true,
     path: '/socket.io/',
     cookie: false,
-    maxHttpBufferSize: 1e8
+    maxHttpBufferSize: 1e8,
+    connectTimeout: 30000,
+    reconnection: true,
+    reconnectionAttempts: 5,
+    reconnectionDelay: 1000,
+    reconnectionDelayMax: 5000,
+    timeout: 20000
   });
 
   // Add connection logging
