@@ -18,17 +18,24 @@ const app = express();
 const corsOptions = {
   origin: process.env.CORS_ORIGIN || 'https://lit-card-game.vercel.app',
   methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
   credentials: true,
   preflightContinue: false,
   optionsSuccessStatus: 204
 };
 
+// Handle CORS preflight requests first, before any other middleware
+app.options('*', cors(corsOptions));
+
 // Apply CORS middleware
 app.use(cors(corsOptions));
 
-// Handle preflight requests explicitly
-app.options('*', cors(corsOptions));
+// Add request logging middleware
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.url}`);
+  console.log('Headers:', req.headers);
+  next();
+});
 
 const server = http.createServer(app);
 
@@ -63,13 +70,6 @@ try {
 
   io.engine.on('upgradeError', (err, req, socket) => {
     console.error('Upgrade error:', err);
-  });
-
-  // Add request logging middleware
-  app.use((req, res, next) => {
-    console.log(`${req.method} ${req.url}`);
-    console.log('Headers:', req.headers);
-    next();
   });
 
   console.log('Socket.IO server initialized successfully');
