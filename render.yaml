@@ -3,7 +3,7 @@ services:
     name: socket-server
     env: node
     buildCommand: npm install
-    startCommand: cd socket-server && node socket-server.js
+    startCommand: cd socket-server && npm install && node socket-server.js
     envVars:
       - key: NODE_ENV
         value: production
