@@ -14,12 +14,12 @@ console.log('Environment variables:', {
 
 const app = express();
 
-// Configure CORS for both Express and Socket.IO
+// Configure CORS with proper options
 const corsOptions = {
-  origin: process.env.CORS_ORIGIN || "https://lit-card-game.vercel.app",
-  methods: ["GET", "POST"],
+  origin: process.env.CORS_ORIGIN || 'https://lit-card-game.vercel.app',
+  methods: ['GET', 'POST'],
   credentials: true,
-  allowedHeaders: ["*"]
+  allowedHeaders: ['Content-Type', 'Authorization']
 };
 
 app.use(cors(corsOptions));
@@ -32,15 +32,12 @@ try {
     transports: ['websocket', 'polling'],
     pingTimeout: 60000,
     pingInterval: 25000,
-    path: '/socket.io/',
-    connectTimeout: 45000,
+    connectTimeout: 60000,
     allowEIO3: true,
     allowUpgrades: true,
+    path: '/socket.io/',
     cookie: false,
-    maxHttpBufferSize: 1e8,
-    connectTimeout: 45000,
-    upgradeTimeout: 30000,
-    rememberUpgrade: true
+    maxHttpBufferSize: 1e8
   });
 
   // Add connection logging

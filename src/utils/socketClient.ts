@@ -39,17 +39,20 @@ export function initSocket(): Socket {
     transports: ['websocket', 'polling'],
     autoConnect: true,
     reconnection: true,
-    reconnectionAttempts: 10,
+    reconnectionAttempts: 5,
     reconnectionDelay: 1000,
     reconnectionDelayMax: 5000,
-    timeout: 60000, // Increase timeout to 60 seconds
+    timeout: 60000,
     forceNew: true,
     path: '/socket.io/',
     withCredentials: true,
     secure: true,
     rejectUnauthorized: false,
     upgrade: true,
-    rememberUpgrade: true
+    rememberUpgrade: true,
+    extraHeaders: {
+      'Access-Control-Allow-Origin': '*'
+    }
   });
   
   socket.on('connect', () => {
@@ -211,7 +214,7 @@ export function createRoom(
       console.error('Connection timeout');
       socket?.off('connect');
       onError({ message: 'Connection timeout. Please check your internet connection and try again.' });
-    }, 10000);
+    }, 30000); // Increased timeout to 30 seconds
     
     socket.once('connect', () => {
       clearTimeout(connectionTimeout);
