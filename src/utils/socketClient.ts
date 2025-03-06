@@ -32,17 +32,17 @@ export function initSocket(): Socket {
   }
   
   console.log('Initializing new socket connection...');
-  const serverUrl = process.env.NEXT_PUBLIC_SOCKET_SERVER_URL || 'http://localhost:3002';
+  const serverUrl = process.env.NEXT_PUBLIC_SOCKET_SERVER_URL || 'https://lit-card-game.onrender.com';
   console.log('Connecting to server URL:', serverUrl);
   
   socket = io(serverUrl, {
     transports: ['websocket', 'polling'],
-    autoConnect: false,
+    autoConnect: true,
     reconnection: true,
     reconnectionAttempts: 5,
     reconnectionDelay: 1000,
     reconnectionDelayMax: 5000,
-    timeout: 45000,
+    timeout: 20000,
     forceNew: true,
     path: '/socket.io',
     withCredentials: true,
@@ -227,7 +227,7 @@ export function createRoom(
       console.error('Connection timeout');
       socket?.off('connect');
       onError({ message: 'Connection timeout. Please check your internet connection and try again.' });
-    }, 45000); // Match server timeout
+    }, 20000); // Match server timeout
     
     socket.once('connect', () => {
       clearTimeout(connectionTimeout);

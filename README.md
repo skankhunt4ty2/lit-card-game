@@ -175,3 +175,60 @@ npm run dev
 - `CORS_ORIGIN`: Allowed origin for CORS (in production)
 - `PORT`: Port for the Socket.IO server (provided by Railway in production)
 - `NODE_ENV`: Environment mode ('development' or 'production')
+
+# LIT Card Game Socket Server
+
+This is the Socket.IO server for the LIT Card Game, handling real-time communication between players.
+
+## Environment Variables
+
+Required environment variables:
+- `PORT`: Server port (default: 10000)
+- `NODE_ENV`: Environment (development/production)
+- `CORS_ORIGIN`: Allowed origin for CORS (e.g., https://lit-card-game.vercel.app)
+
+## Development
+
+1. Install dependencies:
+```bash
+npm install
+```
+
+2. Start the development server:
+```bash
+npm run dev
+```
+
+## Production
+
+The server is configured to run on Render with the following settings:
+- Node.js version: 18.x
+- Build command: `npm install`
+- Start command: `node socket-server.js`
+- Health check path: `/health`
+
+## API Endpoints
+
+- `GET /`: Server status
+- `GET /health`: Health check endpoint
+- WebSocket: `/socket.io`
+
+## Socket Events
+
+### Client to Server
+- `createRoom`: Create a new game room
+- `joinRoom`: Join an existing room
+- `joinTeam`: Join a team
+- `startGame`: Start the game
+- `requestCard`: Request a card from another player
+- `declareSet`: Declare a complete set
+- `claimTurn`: Claim the current turn
+
+### Server to Client
+- `roomCreated`: Room creation confirmation
+- `joinedRoom`: Room join confirmation
+- `roomUpdate`: Room state update
+- `gameStarted`: Game start confirmation
+- `updateHand`: Player's hand update
+- `gameUpdate`: Game state update
+- `error`: Error messages

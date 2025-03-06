@@ -89,7 +89,13 @@ try {
     reconnectionAttempts: 5,
     reconnectionDelay: 1000,
     reconnectionDelayMax: 5000,
-    timeout: 20000
+    timeout: 20000,
+    cors: {
+      origin: process.env.CORS_ORIGIN || 'https://lit-card-game.vercel.app',
+      methods: ['GET', 'POST', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+      credentials: true
+    }
   });
 
   // Add connection logging
