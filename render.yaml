@@ -46,4 +46,10 @@ services:
         value: websocket
       - path: /*
         name: Connection
-        value: Upgrade 
+        value: Upgrade
+      - path: /*
+        name: X-Forwarded-Proto
+        value: https
+      - path: /*
+        name: X-Forwarded-Host
+        value: lit-card-game.onrender.com 

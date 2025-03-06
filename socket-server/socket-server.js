@@ -15,6 +15,9 @@ console.log('Environment variables:', {
 
 const app = express();
 
+// Trust proxy for proper protocol handling
+app.set('trust proxy', true);
+
 // Configure CORS properly
 const corsOptions = {
   origin: process.env.CORS_ORIGIN || 'https://lit-card-game.vercel.app',
@@ -36,6 +39,8 @@ app.use((req, res, next) => {
   console.log(`${req.method} ${req.url}`);
   console.log('Headers:', req.headers);
   console.log('Origin:', req.headers.origin);
+  console.log('Protocol:', req.protocol);
+  console.log('Host:', req.hostname);
   next();
 });
 
@@ -69,16 +74,19 @@ try {
   io.engine.on('connection', (socket) => {
     console.log('New connection attempt:', socket.id);
     console.log('Transport:', socket.conn.transport.name);
+    console.log('Protocol:', socket.conn.protocol);
   });
 
   io.engine.on('upgrade', (req, socket, head) => {
     console.log('Upgrading connection to WebSocket');
     console.log('Request headers:', req.headers);
+    console.log('Protocol:', req.protocol);
   });
 
   io.engine.on('upgradeError', (err, req, socket) => {
     console.error('Upgrade error:', err);
     console.error('Request headers:', req.headers);
+    console.error('Protocol:', req.protocol);
   });
 
   // Add error handling for the server
@@ -92,6 +100,8 @@ try {
   console.log('Server port:', process.env.PORT || 3002);
   console.log('Socket.IO path:', '/socket.io');
   console.log('Available transports:', io.engine.transports);
+  console.log('Node version:', process.version);
+  console.log('Environment:', process.env.NODE_ENV);
 
   // Store active game rooms
   const gameRooms = new Map();
@@ -503,7 +513,12 @@ try {
 
   // Add a health check endpoint
   app.get('/health', (req, res) => {
-    res.status(200).json({ status: 'ok' });
+    res.status(200).json({ 
+      status: 'ok',
+      port: PORT,
+      corsOrigin: process.env.CORS_ORIGIN,
+      nodeEnv: process.env.NODE_ENV
+    });
   });
 
   console.log(`Attempting to start server on port ${PORT}...`);
