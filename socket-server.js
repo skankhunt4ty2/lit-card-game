@@ -533,16 +533,25 @@ try {
     });
   });
 
-  // Get port from environment variable or use default
-  const PORT = process.env.PORT || 3002;
-
-  // Add a health check endpoint with detailed information
-  app.get('/health', (req, res) => {
-    res.status(200).json({ 
+  // Root route handler
+  app.get('/', (req, res) => {
+    res.json({
       status: 'ok',
-      port: PORT,
+      message: 'Socket.IO server is running',
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV,
+      corsOrigin: process.env.CORS_ORIGIN
+    });
+  });
+
+  // Health check endpoint
+  app.get('/health', (req, res) => {
+    res.json({
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV,
+      port: process.env.PORT,
       corsOrigin: process.env.CORS_ORIGIN,
-      nodeEnv: process.env.NODE_ENV,
       headers: req.headers,
       protocol: req.protocol,
       host: req.hostname,
@@ -550,6 +559,9 @@ try {
       forwardedHost: req.headers['x-forwarded-host']
     });
   });
+
+  // Get port from environment variable or use default
+  const PORT = process.env.PORT || 3002;
 
   console.log(`Attempting to start server on port ${PORT}...`);
 
