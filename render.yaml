@@ -11,4 +11,6 @@ services:
       - key: CORS_ORIGIN
         value: https://lit-card-game.vercel.app
       - key: PORT
-        value: 10000 
+        value: 10000
+    healthCheckPath: /health
+    autoDeploy: true 

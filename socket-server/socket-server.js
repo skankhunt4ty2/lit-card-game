@@ -16,7 +16,8 @@ const app = express();
 app.use(cors({
   origin: process.env.CORS_ORIGIN || "*",
   methods: ["GET", "POST"],
-  credentials: true
+  credentials: true,
+  allowedHeaders: ["*"]
 }));
 
 const server = http.createServer(app);
@@ -29,12 +30,19 @@ try {
       credentials: true,
       allowedHeaders: ["*"]
     },
-    transports: ['websocket', 'polling'],
+    transports: ['polling', 'websocket'],
     pingTimeout: 60000,
-    pingInterval: 25000
+    pingInterval: 25000,
+    path: '/socket.io/',
+    connectTimeout: 45000,
+    allowEIO3: true,
+    allowUpgrades: true,
+    cookie: false
   });
 
   console.log('Socket.IO server initialized successfully');
+  console.log('CORS origin:', process.env.CORS_ORIGIN || "*");
+  console.log('Server port:', process.env.PORT || 3002);
 
   // Store active game rooms
   const gameRooms = new Map();

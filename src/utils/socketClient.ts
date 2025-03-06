@@ -26,13 +26,16 @@ export function initSocket(): Socket {
   console.log('Connecting to server URL:', serverUrl);
   
   socket = io(serverUrl, {
-    transports: ['websocket', 'polling'],
+    transports: ['polling', 'websocket'], // Try polling first, then fallback to websocket
     autoConnect: true,
     reconnection: true,
     reconnectionAttempts: 5,
     reconnectionDelay: 1000,
     reconnectionDelayMax: 5000,
-    timeout: 20000
+    timeout: 20000,
+    forceNew: true,
+    path: '/socket.io/',
+    withCredentials: true
   });
 
   socket.on('connect', () => {
@@ -49,6 +52,14 @@ export function initSocket(): Socket {
 
   socket.on('disconnect', (reason) => {
     console.log('Disconnected from server:', reason);
+  });
+
+  socket.on('reconnect_attempt', (attemptNumber) => {
+    console.log('Attempting to reconnect:', attemptNumber);
+  });
+
+  socket.on('reconnect_failed', () => {
+    console.error('Failed to reconnect to server');
   });
 
   return socket;
