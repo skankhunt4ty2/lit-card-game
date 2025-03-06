@@ -17,12 +17,18 @@ const app = express();
 // Configure CORS with proper options
 const corsOptions = {
   origin: process.env.CORS_ORIGIN || 'https://lit-card-game.vercel.app',
-  methods: ['GET', 'POST'],
+  methods: ['GET', 'POST', 'OPTIONS'],
   credentials: true,
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  exposedHeaders: ['Content-Range', 'X-Content-Range'],
+  maxAge: 600
 };
 
+// Apply CORS middleware
 app.use(cors(corsOptions));
+
+// Handle preflight requests
+app.options('*', cors(corsOptions));
 
 const server = http.createServer(app);
 
@@ -37,7 +43,15 @@ try {
     allowUpgrades: true,
     path: '/socket.io/',
     cookie: false,
-    maxHttpBufferSize: 1e8
+    maxHttpBufferSize: 1e8,
+    allowRequest: (req, callback) => {
+      const origin = req.headers.origin;
+      if (origin === process.env.CORS_ORIGIN || origin === 'https://lit-card-game.vercel.app') {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    }
   });
 
   // Add connection logging

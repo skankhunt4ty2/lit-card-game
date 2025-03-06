@@ -51,7 +51,10 @@ export function initSocket(): Socket {
     upgrade: true,
     rememberUpgrade: true,
     extraHeaders: {
-      'Access-Control-Allow-Origin': '*'
+      'Access-Control-Allow-Origin': 'https://lit-card-game.vercel.app',
+      'Access-Control-Allow-Credentials': 'true',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization'
     }
   });
   
