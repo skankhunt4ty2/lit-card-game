@@ -40,4 +40,10 @@ services:
         value: no-cache
       - path: /*
         name: Expires
-        value: 0 
+        value: 0
+      - path: /*
+        name: Upgrade
+        value: websocket
+      - path: /*
+        name: Connection
+        value: Upgrade 

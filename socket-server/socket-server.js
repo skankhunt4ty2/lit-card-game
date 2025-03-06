@@ -9,7 +9,8 @@ console.log('Starting server initialization...');
 console.log('Environment variables:', {
   PORT: process.env.PORT,
   NODE_ENV: process.env.NODE_ENV,
-  CORS_ORIGIN: process.env.CORS_ORIGIN
+  CORS_ORIGIN: process.env.CORS_ORIGIN,
+  NODE_VERSION: process.version
 });
 
 const app = express();
@@ -34,6 +35,7 @@ app.use(cors(corsOptions));
 app.use((req, res, next) => {
   console.log(`${req.method} ${req.url}`);
   console.log('Headers:', req.headers);
+  console.log('Origin:', req.headers.origin);
   next();
 });
 
@@ -66,14 +68,17 @@ try {
   // Add connection logging
   io.engine.on('connection', (socket) => {
     console.log('New connection attempt:', socket.id);
+    console.log('Transport:', socket.conn.transport.name);
   });
 
   io.engine.on('upgrade', (req, socket, head) => {
     console.log('Upgrading connection to WebSocket');
+    console.log('Request headers:', req.headers);
   });
 
   io.engine.on('upgradeError', (err, req, socket) => {
     console.error('Upgrade error:', err);
+    console.error('Request headers:', req.headers);
   });
 
   // Add error handling for the server
@@ -86,6 +91,7 @@ try {
   console.log('CORS origin:', process.env.CORS_ORIGIN || "https://lit-card-game.vercel.app");
   console.log('Server port:', process.env.PORT || 3002);
   console.log('Socket.IO path:', '/socket.io');
+  console.log('Available transports:', io.engine.transports);
 
   // Store active game rooms
   const gameRooms = new Map();
