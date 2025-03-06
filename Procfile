@@ -1,1 +1,1 @@
-web: cd socket-server && npm install && npm start 
+web: cd socket-server && npm install --verbose && NODE_ENV=production DEBUG=* npm start 
