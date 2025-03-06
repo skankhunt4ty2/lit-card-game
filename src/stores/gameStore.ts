@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { GameState, Player, Card, Team, CardRequest, SetDeclaration } from '@/types/game';
+import { GameState, Player, Card, Team, CardRequest, SetDeclaration, Suit, Rank } from '@/types/game';
 import * as socketClient from '@/utils/socketClient';
 
 // Get player name from localStorage if available (with SSR safety check)
@@ -9,14 +9,6 @@ const getStoredPlayerName = (): string => {
   }
   return '';
 };
-
-export type Suit = 'hearts' | 'diamonds' | 'clubs' | 'spades';
-export type Rank = '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | '10' | 'J' | 'Q' | 'K' | 'A';
-
-export interface Card {
-    suit: Suit;
-    rank: Rank;
-}
 
 interface GameStore {
   // Player data
@@ -39,8 +31,8 @@ interface GameStore {
   joinTeam: (team: Team) => void;
   shuffleTeams: () => void;
   startGame: () => void;
-  requestCard: (targetPlayerId: string, suit: Card['suit'], rank: Card['rank'], setType: Card['setType']) => void;
-  declareSet: (suit: Card['suit'], setType: Card['setType']) => void;
+  requestCard: (targetPlayerId: string, suit: Suit, rank: Rank, setType: 'lower' | 'upper') => void;
+  declareSet: (suit: Suit, setType: 'lower' | 'upper') => void;
   claimTurn: () => void;
   setErrorMessage: (message: string | null) => void;
   reset: () => void;
@@ -209,7 +201,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     );
   },
   
-  requestCard: (targetPlayerId: string, suit: Card['suit'], rank: Card['rank'], setType: Card['setType']) => {
+  requestCard: (targetPlayerId: string, suit: Suit, rank: Rank, setType: 'lower' | 'upper') => {
     const { roomName, playerId } = get();
     if (!roomName || !playerId) {
       set({ errorMessage: "You must be in a room to request cards" });
@@ -248,7 +240,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     );
   },
   
-  declareSet: (suit: Card['suit'], setType: Card['setType']) => {
+  declareSet: (suit: Suit, setType: 'lower' | 'upper') => {
     const { roomName, playerId } = get();
     if (!roomName || !playerId) {
       set({ errorMessage: "You must be in a room to declare a set" });
