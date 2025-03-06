@@ -13,24 +13,23 @@ console.log('Environment variables:', {
 });
 
 const app = express();
-app.use(cors({
-  origin: process.env.CORS_ORIGIN || "*",
+
+// Configure CORS for both Express and Socket.IO
+const corsOptions = {
+  origin: process.env.CORS_ORIGIN || "https://lit-card-game.vercel.app",
   methods: ["GET", "POST"],
   credentials: true,
   allowedHeaders: ["*"]
-}));
+};
+
+app.use(cors(corsOptions));
 
 const server = http.createServer(app);
 
 try {
   const io = new Server(server, {
-    cors: {
-      origin: process.env.CORS_ORIGIN || "*",
-      methods: ["GET", "POST"],
-      credentials: true,
-      allowedHeaders: ["*"]
-    },
-    transports: ['polling', 'websocket'],
+    cors: corsOptions,
+    transports: ['websocket', 'polling'],
     pingTimeout: 60000,
     pingInterval: 25000,
     path: '/socket.io/',
@@ -41,7 +40,7 @@ try {
   });
 
   console.log('Socket.IO server initialized successfully');
-  console.log('CORS origin:', process.env.CORS_ORIGIN || "*");
+  console.log('CORS origin:', process.env.CORS_ORIGIN || "https://lit-card-game.vercel.app");
   console.log('Server port:', process.env.PORT || 3002);
 
   // Store active game rooms

@@ -26,7 +26,7 @@ export function initSocket(): Socket {
   console.log('Connecting to server URL:', serverUrl);
   
   socket = io(serverUrl, {
-    transports: ['polling', 'websocket'], // Try polling first, then fallback to websocket
+    transports: ['websocket', 'polling'],
     autoConnect: true,
     reconnection: true,
     reconnectionAttempts: 5,
@@ -35,7 +35,9 @@ export function initSocket(): Socket {
     timeout: 20000,
     forceNew: true,
     path: '/socket.io/',
-    withCredentials: true
+    withCredentials: true,
+    secure: true,
+    rejectUnauthorized: false
   });
 
   socket.on('connect', () => {
@@ -44,6 +46,12 @@ export function initSocket(): Socket {
 
   socket.on('connect_error', (error: Error) => {
     console.error('Connection error:', error);
+    // Try to reconnect with different transport if polling fails
+    if (error.message.includes('polling') && socket) {
+      console.log('Polling failed, trying websocket transport...');
+      socket.io.opts.transports = ['websocket'];
+      socket.connect();
+    }
   });
 
   socket.on('error', (error: Error) => {
