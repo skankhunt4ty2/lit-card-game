@@ -7,7 +7,7 @@
     "dev": "nodemon socket-server.js"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": "18.x"
   },
   "dependencies": {
     "socket.io": "^4.7.4",
