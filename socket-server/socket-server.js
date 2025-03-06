@@ -34,6 +34,18 @@ app.options('*', cors(corsOptions));
 // Apply CORS middleware
 app.use(cors(corsOptions));
 
+// Add specific handler for Socket.IO preflight requests
+app.options('/socket.io/*', (req, res) => {
+  console.log('Socket.IO preflight request received');
+  console.log('Headers:', req.headers);
+  res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || 'https://lit-card-game.vercel.app');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Max-Age', '86400');
+  res.status(204).end();
+});
+
 // Add request logging middleware
 app.use((req, res, next) => {
   console.log(`${req.method} ${req.url}`);
@@ -41,6 +53,8 @@ app.use((req, res, next) => {
   console.log('Origin:', req.headers.origin);
   console.log('Protocol:', req.protocol);
   console.log('Host:', req.hostname);
+  console.log('X-Forwarded-Proto:', req.headers['x-forwarded-proto']);
+  console.log('X-Forwarded-Host:', req.headers['x-forwarded-host']);
   next();
 });
 
@@ -75,18 +89,21 @@ try {
     console.log('New connection attempt:', socket.id);
     console.log('Transport:', socket.conn.transport.name);
     console.log('Protocol:', socket.conn.protocol);
+    console.log('Headers:', socket.handshake.headers);
   });
 
   io.engine.on('upgrade', (req, socket, head) => {
     console.log('Upgrading connection to WebSocket');
     console.log('Request headers:', req.headers);
     console.log('Protocol:', req.protocol);
+    console.log('X-Forwarded-Proto:', req.headers['x-forwarded-proto']);
   });
 
   io.engine.on('upgradeError', (err, req, socket) => {
     console.error('Upgrade error:', err);
     console.error('Request headers:', req.headers);
     console.error('Protocol:', req.protocol);
+    console.error('X-Forwarded-Proto:', req.headers['x-forwarded-proto']);
   });
 
   // Add error handling for the server
@@ -511,13 +528,18 @@ try {
   // Get port from environment variable or use default
   const PORT = process.env.PORT || 3002;
 
-  // Add a health check endpoint
+  // Add a health check endpoint with detailed information
   app.get('/health', (req, res) => {
     res.status(200).json({ 
       status: 'ok',
       port: PORT,
       corsOrigin: process.env.CORS_ORIGIN,
-      nodeEnv: process.env.NODE_ENV
+      nodeEnv: process.env.NODE_ENV,
+      headers: req.headers,
+      protocol: req.protocol,
+      host: req.hostname,
+      forwardedProto: req.headers['x-forwarded-proto'],
+      forwardedHost: req.headers['x-forwarded-host']
     });
   });
 

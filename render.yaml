@@ -14,6 +14,45 @@ services:
     healthCheckPath: /health
     autoDeploy: true
     headers:
+      - path: /socket.io/*
+        name: Access-Control-Allow-Origin
+        value: https://lit-card-game.vercel.app
+      - path: /socket.io/*
+        name: Access-Control-Allow-Methods
+        value: GET, POST, OPTIONS
+      - path: /socket.io/*
+        name: Access-Control-Allow-Headers
+        value: Content-Type, Authorization, X-Requested-With, Accept, Origin
+      - path: /socket.io/*
+        name: Access-Control-Allow-Credentials
+        value: true
+      - path: /socket.io/*
+        name: Access-Control-Max-Age
+        value: 86400
+      - path: /socket.io/*
+        name: Vary
+        value: Origin
+      - path: /socket.io/*
+        name: Cache-Control
+        value: no-cache, no-store, must-revalidate
+      - path: /socket.io/*
+        name: Pragma
+        value: no-cache
+      - path: /socket.io/*
+        name: Expires
+        value: 0
+      - path: /socket.io/*
+        name: Upgrade
+        value: websocket
+      - path: /socket.io/*
+        name: Connection
+        value: Upgrade
+      - path: /socket.io/*
+        name: X-Forwarded-Proto
+        value: https
+      - path: /socket.io/*
+        name: X-Forwarded-Host
+        value: lit-card-game.onrender.com
       - path: /*
         name: Access-Control-Allow-Origin
         value: https://lit-card-game.vercel.app
@@ -40,16 +79,4 @@ services:
         value: no-cache
       - path: /*
         name: Expires
-        value: 0
-      - path: /*
-        name: Upgrade
-        value: websocket
-      - path: /*
-        name: Connection
-        value: Upgrade
-      - path: /*
-        name: X-Forwarded-Proto
-        value: https
-      - path: /*
-        name: X-Forwarded-Host
-        value: lit-card-game.onrender.com 
+        value: 0 
