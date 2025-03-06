@@ -83,14 +83,6 @@ export function initSocket(): Socket {
   });
 
   // Add more detailed error logging
-  socket.io.on('ping', () => {
-    console.log('ping');
-  });
-
-  socket.io.on('pong', (latency) => {
-    console.log('pong', latency);
-  });
-
   socket.io.on('reconnect_attempt', (attempt) => {
     console.log('reconnection attempt', attempt);
   });
