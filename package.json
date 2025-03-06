@@ -22,7 +22,8 @@
     "zustand": "^4.5.1",
     "uuid": "^9.0.1",
     "@vercel/og": "^0.6.2",
-    "@geist-ui/core": "^2.3.8"
+    "@geist-ui/core": "^2.3.8",
+    "dotenv": "^16.4.5"
   },
   "devDependencies": {
     "@types/node": "^20",
