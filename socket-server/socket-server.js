@@ -36,7 +36,24 @@ try {
     connectTimeout: 45000,
     allowEIO3: true,
     allowUpgrades: true,
-    cookie: false
+    cookie: false,
+    maxHttpBufferSize: 1e8,
+    connectTimeout: 45000,
+    upgradeTimeout: 30000,
+    rememberUpgrade: true
+  });
+
+  // Add connection logging
+  io.engine.on('connection', (socket) => {
+    console.log('New connection attempt:', socket.id);
+  });
+
+  io.engine.on('upgrade', (req, socket, head) => {
+    console.log('Upgrading connection to WebSocket');
+  });
+
+  io.engine.on('upgradeError', (err, req, socket) => {
+    console.error('Upgrade error:', err);
   });
 
   console.log('Socket.IO server initialized successfully');

@@ -37,7 +37,9 @@ export function initSocket(): Socket {
     path: '/socket.io/',
     withCredentials: true,
     secure: true,
-    rejectUnauthorized: false
+    rejectUnauthorized: false,
+    upgrade: true,
+    rememberUpgrade: true
   });
 
   socket.on('connect', () => {
@@ -60,6 +62,10 @@ export function initSocket(): Socket {
 
   socket.on('disconnect', (reason) => {
     console.log('Disconnected from server:', reason);
+    if (reason === 'io server disconnect') {
+      // Server initiated disconnect, try to reconnect
+      socket?.connect();
+    }
   });
 
   socket.on('reconnect_attempt', (attemptNumber) => {
@@ -68,6 +74,14 @@ export function initSocket(): Socket {
 
   socket.on('reconnect_failed', () => {
     console.error('Failed to reconnect to server');
+    // Try to reconnect with a new socket instance
+    if (socket) {
+      socket.disconnect();
+      socket = null;
+      setTimeout(() => {
+        initSocket();
+      }, 1000);
+    }
   });
 
   return socket;
