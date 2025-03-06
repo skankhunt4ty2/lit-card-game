@@ -23,9 +23,16 @@ export function initSocket(): Socket {
 
   console.log('Initializing new socket connection...');
   const serverUrl = process.env.NEXT_PUBLIC_SOCKET_SERVER_URL || 'http://localhost:3002';
+  console.log('Connecting to server URL:', serverUrl);
+  
   socket = io(serverUrl, {
-    transports: ['websocket'],
+    transports: ['websocket', 'polling'],
     autoConnect: true,
+    reconnection: true,
+    reconnectionAttempts: 5,
+    reconnectionDelay: 1000,
+    reconnectionDelayMax: 5000,
+    timeout: 20000
   });
 
   socket.on('connect', () => {
@@ -38,6 +45,10 @@ export function initSocket(): Socket {
 
   socket.on('error', (error: Error) => {
     console.error('Socket error:', error);
+  });
+
+  socket.on('disconnect', (reason) => {
+    console.log('Disconnected from server:', reason);
   });
 
   return socket;

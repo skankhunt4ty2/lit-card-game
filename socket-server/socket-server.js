@@ -13,7 +13,11 @@ console.log('Environment variables:', {
 });
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: process.env.CORS_ORIGIN || "*",
+  methods: ["GET", "POST"],
+  credentials: true
+}));
 
 const server = http.createServer(app);
 
@@ -22,9 +26,12 @@ try {
     cors: {
       origin: process.env.CORS_ORIGIN || "*",
       methods: ["GET", "POST"],
-      credentials: true
+      credentials: true,
+      allowedHeaders: ["*"]
     },
-    transports: ['websocket', 'polling']
+    transports: ['websocket', 'polling'],
+    pingTimeout: 60000,
+    pingInterval: 25000
   });
 
   console.log('Socket.IO server initialized successfully');
