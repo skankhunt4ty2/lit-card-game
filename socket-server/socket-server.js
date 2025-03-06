@@ -177,36 +177,84 @@ try {
 
   // Socket.IO event handlers
   io.on('connection', (socket) => {
-    console.log('New connection:', socket.id);
-
-    // Create a new room
-    socket.on('createRoom', ({ playerName, roomName, playerCount }) => {
-      if (gameRooms.has(roomName)) {
-        socket.emit('error', { message: 'Room already exists' });
-        return;
+    console.log(`Client connected: ${socket.id}`);
+    
+    // Handle disconnection
+    socket.on('disconnect', () => {
+      console.log(`Client disconnected: ${socket.id}`);
+      
+      // Find and remove player from any room
+      for (const [roomName, room] of gameRooms.entries()) {
+        const playerIndex = room.players.findIndex(p => p.socketId === socket.id);
+        if (playerIndex !== -1) {
+          console.log(`Removing player from room ${roomName}`);
+          // Implement player removal logic
+        }
       }
+    });
 
-      const playerId = socket.id;
-      const room = {
-        name: roomName,
-        playerCount,
-        players: [{
-          id: playerId,
-          name: playerName,
-          hand: [],
-          team: 'unassigned',
-          connected: true,
-          canClaimTurn: false
-        }],
-        gameStatus: 'waiting',
-        currentTurnPlayerId: null,
-        capturedSets: [],
-        adminId: playerId
-      };
-
-      gameRooms.set(roomName, room);
-      socket.join(roomName);
-      socket.emit('roomCreated', { roomName, playerId });
+    // Handle create room request
+    socket.on('createRoom', (data) => {
+      try {
+        console.log(`Create room request: ${JSON.stringify(data)}`);
+        const { playerName, roomName, playerCount } = data;
+        
+        if (!playerName || !roomName) {
+          console.error('Invalid createRoom data: missing playerName or roomName');
+          socket.emit('error:createRoom', { message: 'Player name and room name are required' });
+          return;
+        }
+        
+        if (gameRooms.has(roomName)) {
+          console.log(`Room ${roomName} already exists`);
+          socket.emit('error:createRoom', { message: 'Room already exists' });
+          return;
+        }
+        
+        // Create player ID
+        const playerId = `${socket.id}`;
+        
+        // Create room
+        const room = {
+          name: roomName,
+          players: [{ 
+            id: playerId, 
+            name: playerName, 
+            socketId: socket.id,
+            team: null,
+            hand: [],
+            isHost: true
+          }],
+          maxPlayers: playerCount,
+          status: 'waiting',
+          teams: {
+            A: [],
+            B: []
+          },
+          currentTurn: null,
+          deck: [],
+          capturedSets: {
+            A: [],
+            B: []
+          },
+          lastAction: null
+        };
+        
+        // Add room to game rooms
+        gameRooms.set(roomName, room);
+        
+        // Add socket to room
+        socket.join(roomName);
+        
+        console.log(`Room ${roomName} created by ${playerName}`);
+        
+        // Send success response
+        socket.emit('roomCreated', { roomName, playerId });
+        
+      } catch (error) {
+        console.error('Error creating room:', error);
+        socket.emit('error:createRoom', { message: 'Server error creating room' });
+      }
     });
 
     // Join an existing room
@@ -414,20 +462,6 @@ try {
       player.canClaimTurn = false;
       room.currentTurnPlayerId = player.id;
       io.to(roomName).emit('gameUpdate', room);
-    });
-
-    // Handle disconnection
-    socket.on('disconnect', () => {
-      console.log('Client disconnected:', socket.id);
-
-      // Find and update player in all rooms
-      gameRooms.forEach((room, roomName) => {
-        const player = room.players.find(p => p.id === socket.id);
-        if (player) {
-          player.connected = false;
-          io.to(roomName).emit('roomUpdate', room);
-        }
-      });
     });
   });
 

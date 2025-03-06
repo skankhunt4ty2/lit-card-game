@@ -191,88 +191,77 @@ export function createRoom(
   onCreated: (data: { roomName: string, playerId: string }) => void,
   onError: (error: { message: string }) => void
 ): void {
-  // Don't try to create if we're in cleanup mode
-  if (isCleaningUp) {
-    console.log('Not creating room - in cleanup mode');
-    onError({ message: 'Connection is being cleaned up, please try again in a moment' });
-    return;
-  }
-  
-  // Don't create with empty name or room
-  if (!playerName || !roomName) {
-    console.error('Cannot create room with empty player name or room name');
-    onError({ message: 'Player name and room name are required' });
-    return;
-  }
-  
   console.log(`Attempting to create room ${roomName} as ${playerName} with ${playerCount} players`);
   
-  const socket = initSocket();
-  
-  // Skip if already created/joined with the same parameters
-  if (hasJoinedRoom && currentPlayerName === playerName && currentRoomName === roomName) {
-    console.log(`Already created room ${roomName} as ${playerName}, skipping duplicate creation`);
-    // If we have the playerId, we can simulate the onCreated callback
-    if (currentPlayerId) {
-      onCreated({ roomName, playerId: currentPlayerId });
-    }
+  const socketInstance = getSocket();
+  if (!socketInstance) {
+    console.error('Socket not initialized');
+    onError({ message: 'Socket connection not established. Please refresh the page and try again.' });
     return;
   }
-  
-  // Remove any existing listeners to prevent duplicates
+
+  // Confirm socket is connected before attempting to create room
+  if (!socketInstance.connected) {
+    console.log('Socket not connected, attempting to connect...');
+    socketInstance.connect();
+    
+    // Wait for connection before proceeding
+    socketInstance.once('connect', () => {
+      console.log('Connected, now creating room...');
+      emitCreateRoom(socketInstance, playerName, roomName, playerCount, onCreated, onError);
+    });
+    
+    // Handle connection failure
+    socketInstance.once('connect_error', (error) => {
+      console.error('Failed to connect for room creation:', error);
+      onError({ message: 'Failed to connect to the game server. Please try again later.' });
+    });
+  } else {
+    // Socket already connected, proceed with room creation
+    emitCreateRoom(socketInstance, playerName, roomName, playerCount, onCreated, onError);
+  }
+}
+
+// Helper function to emit createRoom event
+function emitCreateRoom(
+  socket: Socket,
+  playerName: string,
+  roomName: string,
+  playerCount: 6 | 8,
+  onCreated: (data: { roomName: string, playerId: string }) => void,
+  onError: (error: { message: string }) => void
+) {
+  // Clear any previous listeners to avoid duplicates
   socket.off('roomCreated');
-  socket.off('error');
-  socket.off('connect_error');
+  socket.off('error:createRoom');
   
-  // Add a timeout to handle cases where the server never responds
-  const createTimeout = setTimeout(() => {
+  // Set up a timeout for room creation (30 seconds)
+  const timeoutId = setTimeout(() => {
     console.error(`Timed out waiting to create room ${roomName}`);
     socket.off('roomCreated');
-    socket.off('error');
-    socket.off('connect_error');
-    onError({ message: 'Timed out waiting to create room. The server may be offline.' });
-  }, 10000); // 10 second timeout
-  
-  // Handle connection errors
-  socket.on('connect_error', (error) => {
-    clearTimeout(createTimeout);
-    console.error(`Connection error while creating room ${roomName}:`, error.message);
-    socket.off('roomCreated');
-    socket.off('error');
-    socket.off('connect_error');
-    onError({ message: `Connection error: ${error.message}` });
-  });
-  
-  // Emit create event
-  try {
-    socket.emit('createRoom', { playerName, roomName, playerCount });
-  } catch (e) {
-    clearTimeout(createTimeout);
-    console.error(`Error emitting createRoom event:`, e);
-    onError({ message: 'Failed to send create request' });
-    return;
-  }
-  
-  socket.on('roomCreated', (data) => {
-    clearTimeout(createTimeout);
-    socket.off('connect_error');
-    
-    // Store the player information
-    currentPlayerId = data.playerId;
-    currentPlayerName = playerName;
-    currentRoomName = roomName;
-    hasJoinedRoom = true;
-    
-    console.log(`Successfully created room ${roomName} with ID ${data.playerId}`);
+    socket.off('error:createRoom');
+    onError({ message: 'Connection timed out while creating room. Please try again.' });
+  }, 30000); // Increase timeout to 30 seconds
+
+  // Listen for successful room creation
+  socket.on('roomCreated', (data: { roomName: string, playerId: string }) => {
+    clearTimeout(timeoutId);
+    socket.off('error:createRoom');
+    console.log(`Room ${data.roomName} created successfully, player ID: ${data.playerId}`);
     onCreated(data);
   });
-  
-  socket.on('error', (error) => {
-    clearTimeout(createTimeout);
-    socket.off('connect_error');
+
+  // Listen for errors
+  socket.on('error:createRoom', (error: { message: string }) => {
+    clearTimeout(timeoutId);
+    socket.off('roomCreated');
     console.error(`Error creating room ${roomName}:`, error.message);
     onError(error);
   });
+
+  // Emit the createRoom event
+  console.log(`Emitting createRoom event for room ${roomName}`);
+  socket.emit('createRoom', { playerName, roomName, playerCount });
 }
 
 // Join a team
