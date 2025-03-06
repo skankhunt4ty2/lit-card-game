@@ -3,7 +3,7 @@ services:
     name: socket-server
     env: node
     buildCommand: npm install
-    startCommand: node socket-server/socket-server.js
+    startCommand: cd socket-server && node socket-server.js
     envVars:
       - key: NODE_ENV
         value: production
@@ -11,6 +11,8 @@ services:
         value: 10000
       - key: CORS_ORIGIN
         value: https://lit-card-game.vercel.app
+      - key: NODE_VERSION
+        value: 18.17.0
     healthCheckPath: /health
     autoDeploy: true
     headers:
